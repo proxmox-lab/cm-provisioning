@@ -39,10 +39,19 @@ variable NETMASK {
   description = "Netmask used to configure static IP address."
 }
 
+variable PRIVATE_GPG_KEY {
+  type        = string
+  description = "Private GPG key used to enable Salt to handle encrypted Pillar data."
+}
 
 variable PRIVATE_KEY {
   type        = string
   description = "Private SSH key used to connect to the Git-hosted Salt state tree."
+}
+
+variable PUBLIC_GPG_KEY {
+  type        = string
+  description = "Public GPG key used to enable Salt to handle encrypted Pillar data."
 }
 
 variable PUBLIC_KEY {

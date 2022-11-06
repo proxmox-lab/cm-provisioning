@@ -62,7 +62,9 @@ data "template_file" "user_data" {
     git_repository        = var.CONFIG_GIT_REPOSITORY_URL
     hostname              = local.name
     log_group_name        = "/${var.GIT_REPOSITORY}/${local.name}"
+    privgpgkey            = indent(6, base64decode(var.PRIVATE_GPG_KEY))
     privkey               = indent(6, base64decode(var.PRIVATE_KEY))
+    pubgpgkey             = indent(6, base64decode(var.PUBLIC_GPG_KEY))
     pubkey                = indent(6, base64decode(var.PUBLIC_KEY))
     region                = data.aws_region.default.name
     role                  = aws_iam_role.default.name
