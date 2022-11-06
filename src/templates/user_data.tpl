@@ -152,6 +152,10 @@ write_files:
     permissions: '0644'
     content: |
       ${pubgpgkey}
+  - path: /etc/environment
+    content: |
+      GNUPGHOME=/etc/salt/gpgkeys
+    append: true
 runcmd:
   - echo "*******************************************************************************"
   - echo "Configuring the AWS CLI..."
