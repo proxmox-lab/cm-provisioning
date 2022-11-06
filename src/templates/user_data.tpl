@@ -128,6 +128,30 @@ write_files:
       auto_accept: True
       log_level: info
       log_level_logfile: info
+      ext_pillar:
+        - git:
+          - production ${git_repository}:
+            - env: base
+            - root: pillar
+            - privkey: /root/.ssh/id_rsa
+            - pubkey: /root/.ssh/id_rsa.pub
+          - development ${git_repository}:
+            - env: development
+            - root: pillar
+            - privkey: /root/.ssh/id_rsa
+            - pubkey: /root/.ssh/id_rsa.pub
+  - path: /root/private.key
+    encoding: text/plain
+    owner: root:root
+    permissions: '0600'
+    content: |
+      ${privgpgkey}
+  - path: /root/public.key
+    encoding: text/plain
+    owner: root:root
+    permissions: '0644'
+    content: |
+      ${pubgpgkey}
 runcmd:
   - echo "*******************************************************************************"
   - echo "Configuring the AWS CLI..."
@@ -174,6 +198,13 @@ runcmd:
   - echo "Restart Salt Master Agent..."
   - echo "*******************************************************************************"
   - systemctl start salt-master
+  - echo "*******************************************************************************"
+  - echo "Import GPG Keys for Encrypted Pillar Handling..."
+  - echo "*******************************************************************************"
+  - mkdir -p /etc/salt/gpgkeys
+  - chmod 700 /etc/salt/gpgkeys
+  - gpg --homedir /etc/salt/gpgkeys --import /root/private.key
+  - gpg --homedir /etc/salt/gpgkeys --import /root/public.key
   - echo "*******************************************************************************"
   - echo "User Data Script Execution Complete"
   - echo "*******************************************************************************"
