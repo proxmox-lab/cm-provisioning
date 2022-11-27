@@ -157,6 +157,7 @@ write_files:
       GNUPGHOME=/etc/salt/gpgkeys
     append: true
 runcmd:
+  - set -euo pipefail
   - echo "*******************************************************************************"
   - echo "Configuring the AWS CLI..."
   - echo "*******************************************************************************"
@@ -170,13 +171,19 @@ runcmd:
   - systemctl stop amazon-ssm-agent
   - read activation_id activation_code <<<$(echo $(aws ssm create-activation --default-instance-name "${hostname}" --description "${description}" --iam-role ${role} --registration-limit 1 --region ${region} --tags ${tags} | jq -r '.ActivationId, .ActivationCode'))
   - amazon-ssm-agent -register -code $activation_code -id $activation_id -region ${region}
+  - systemctl enable amazon-ssm-agent
   - systemctl start amazon-ssm-agent
   - echo "*******************************************************************************"
   - echo "Configuring the AWS CloudWatch Agent..."
   - echo "*******************************************************************************"
-  - mv /tmp/common-config.toml /opt/aws/amazon-cloudwatch-agent/etc/common-config.toml
-  - mv /tmp/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
-  - systemctl start amazon-cloudwatch-agent
+  - if [ ${enable_cw_logging} -eq 1 ]; then
+  -   mv /tmp/common-config.toml /opt/aws/amazon-cloudwatch-agent/etc/common-config.toml
+  -   mv /tmp/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+  -   systemctl enable amazon-cloudwatch-agent
+  -   systemctl start amazon-cloudwatch-agent
+  - else
+  -   echo "*** CloudWatch Logs will NOT be Enabled for this Server ***"
+  - fi
   - echo "*******************************************************************************"
   - echo "Installing and Configuring Saltmaster..."
   - echo "*******************************************************************************"

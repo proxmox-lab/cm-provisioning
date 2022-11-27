@@ -12,6 +12,11 @@ variable DEFAULT_GATEWAY {
   description = "Default network gateway used to configure static IP address."
 }
 
+variable ENABLE_CW_LOGGING {
+  type        = bool
+  default     = false
+  description = "Determines whether or not logs are written to AWS CloudWatch. This becomes expensive so enable with care."
+}
 
 variable FS_SPEC {
   type        = string
