@@ -57,6 +57,7 @@ data "template_file" "user_data" {
     branch                = terraform.workspace
     description           = local.description
     domain                = local.domain
+    enable_cw_logging     = var.ENABLE_CW_LOGGING ? 1 : 0
     fs_spec               = var.FS_SPEC
     git_host              = var.CONFIG_GIT_HOST
     git_repository        = var.CONFIG_GIT_REPOSITORY_URL
