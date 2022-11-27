@@ -9,6 +9,31 @@ package_update: true
 package_upgrade: true
 package_reboot_if_required: true
 write_files:
+  - path: /etc/amazon/ssm/seelog.xml
+    encoding: text/plain
+    owner: root:root
+    permissions: '0644'
+    content: |
+      <!--amazon-ssm-agent uses seelog logging -->
+      <!--Seelog has github wiki pages, which contain detailed how-tos references: https://github.com/cihub/seelog/wiki -->
+      <!--Seelog examples can be found here: https://github.com/cihub/seelog-examples -->
+      <seelog type="adaptive" mininterval="2000000" maxinterval="100000000" critmsgcount="500" minlevel="info">
+          <exceptions>
+              <exception filepattern="test*" minlevel="error"/>
+          </exceptions>
+          <outputs formatid="fmtinfo">
+              <console formatid="fmtinfo"/>
+              <rollingfile type="size" filename="/var/log/amazon/ssm/amazon-ssm-agent.log" maxsize="30000000" maxrolls="5"/>
+              <filter levels="error,critical" formatid="fmterror">
+                  <rollingfile type="size" filename="/var/log/amazon/ssm/errors.log" maxsize="10000000" maxrolls="5"/>
+              </filter>
+          </outputs>
+          <formats>
+              <format id="fmterror" format="%Date %Time %LEVEL [%FuncShort @ %File.%Line] %Msg%n"/>
+              <format id="fmtdebug" format="%Date %Time %LEVEL [%FuncShort @ %File.%Line] %Msg%n"/>
+              <format id="fmtinfo" format="%Date %Time %LEVEL %Msg%n"/>
+          </formats>
+      </seelog>
   - path: /tmp/common-config.toml
     encoding: text/plain
     owner: root:root
@@ -177,12 +202,13 @@ runcmd:
   - echo "Configuring the AWS CloudWatch Agent..."
   - echo "*******************************************************************************"
   - if [ ${enable_cw_logging} -eq 1 ]; then
+  -   echo "*** Enabling CloudWatch Logs for this Server ***"
   -   mv /tmp/common-config.toml /opt/aws/amazon-cloudwatch-agent/etc/common-config.toml
   -   mv /tmp/amazon-cloudwatch-agent.json /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
   -   systemctl enable amazon-cloudwatch-agent
   -   systemctl start amazon-cloudwatch-agent
   - else
-  -   echo "*** CloudWatch Logs will NOT be Enabled for this Server ***"
+  -   echo "*** CloudWatch Logs NOT Enabled for this Server ***"
   - fi
   - echo "*******************************************************************************"
   - echo "Installing and Configuring Saltmaster..."
@@ -203,7 +229,12 @@ runcmd:
   - echo "${fs_spec}  /etc/salt/pki  nfs  nolock,hard  0  0" >> /etc/fstab
   - mount -a
   - KEY_FILES=$(find /etc/salt/pki -type f)
-  - if [ -z "$KEY_FILES" ]; then mv /tmp/pki/* /etc/salt/pki; fi
+  - if [ -z "$KEY_FILES" ]; then
+  -   echo "*** No Pre-Existing Salt Master Keys ***"
+  -   mv /tmp/pki/* /etc/salt/pki;
+  - else
+  -   echo "*** Pre-Existing Salt Master Keys Loaded ***"
+  - fi
   - rm -rf /tmp/pki
   - echo "*******************************************************************************"
   - echo "Restart Salt Master Agent..."
